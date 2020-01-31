@@ -4,15 +4,20 @@ namespace Assets.Scripts
 {
     public class EnemyDetectPlayer : MonoBehaviour
     {
+        //private bool _hasDamaged;
+        private bool _playerHasSword = false;
+        
         public GameObject Player;
         public GameObject Enemy;
 
-        private bool _hasDamaged;
-        private Vector3 _startPosPlayer;
+        private PlayerMovement playerMovementScript;
 
-        void Start()
+        private void Start()
         {
-            _startPosPlayer = Player.transform.position;
+            if (playerMovementScript == null)
+            {
+                playerMovementScript = Player.GetComponent<PlayerMovement>();
+            }
         }
 
         // Update is called once per frame
@@ -23,23 +28,15 @@ namespace Assets.Scripts
 
             if (playerPos == enemyPos)
             {
-                if (_hasDamaged) return;
-            
-                DealDamage(false, _startPosPlayer);
-                // Enemy.SetActive(false);
-
-                _hasDamaged = true;
+                // if (_hasDamaged) return;  
+                if (!_playerHasSword)
+                {
+                    Player.SendMessage("ReduceHealth", 1);
+                    playerMovementScript.ResetPlayer();
+                }
+                else
+                    Enemy.SetActive(false);
             }
-        }
-
-        void DealDamage(bool visibility, Vector3 playerPos)
-        {
-            Player.SendMessage("ReduceHealth", 1);
-            Player.SendMessage("SmoothMovement", _startPosPlayer);
-            // Player.GetComponent<Renderer>().enabled = visibility;
-
-
-            
-        }
+        }        
     }
 }
