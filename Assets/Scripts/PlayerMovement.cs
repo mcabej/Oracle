@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 using Vector2 = UnityEngine.Vector2;
 
 
@@ -17,6 +19,7 @@ namespace Assets.Scripts
         public Tilemap GroundTileMap;
         public Tilemap InnerWallTileMap;
         public Tilemap FogTileMap;
+        public Text CoinText;
 
         public Rigidbody2D Rb;
         public Animator Animator;
@@ -26,11 +29,19 @@ namespace Assets.Scripts
         private bool _onCoolDown;
         private Vector2 _playerStartPos;
 
-        private List<Vector2> _inputKeys = new List<Vector2>();
+        public Transform attackPoint;
+        public float attackRange = 1f;
+        public LayerMask enemyLayers;
 
+        
+
+        public int coins;
+        
         private void Start()
         {
             _playerStartPos = Rb.position;
+            coins = 0;
+            SetCountText();
         }
 
         // Movement 
@@ -49,15 +60,10 @@ namespace Assets.Scripts
                 Move(_movement);
             }
 
-//            if (_inputKeys.Count > 2)
-//            {
-//                foreach (var inputKey in _inputKeys)
-//                {
-//                    StartCoroutine(ActionCooldown(0.2f));
-//                    Move(inputKey);
-//                }
-//
-//            }
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Attack();
+            }
 
             // Animate Sprites
             Animator.SetFloat("Speed", _movement.sqrMagnitude);
@@ -72,7 +78,6 @@ namespace Assets.Scripts
 
             if (hasGroundTile && !hasObstacleTileInner && _isMoving == false)
             {
-                _isMoving = true;
                 _target = targetCell;
 
                 StartCoroutine(SmoothMovement(_target));
@@ -81,6 +86,8 @@ namespace Assets.Scripts
 
         private IEnumerator SmoothMovement(Vector2? end)
         {
+            _isMoving = true;
+
             float remainingDistance = (Rb.position - end.Value).sqrMagnitude;
 
             Sprite.flipX = false;
@@ -129,10 +136,9 @@ namespace Assets.Scripts
             StopMovement();
             StopAllCoroutines();
             Rb.position = _playerStartPos;
-
-            StartCoroutine(ActionCooldown(0.2f));
-
             _target = null;
+
+            StartCoroutine(ActionCooldown(0.5f));
         }
 
         public void ToggleFog(Vector3Int movement)
@@ -145,6 +151,52 @@ namespace Assets.Scripts
         private TileBase GetCell(Tilemap tileMap, Vector2 cellWorldPos)
         {
             return tileMap.GetTile(tileMap.WorldToCell(cellWorldPos));
+        }
+
+        public void Attack()
+        {
+            //Detect enemies in range
+            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
+            
+
+            //Deal Damage
+            foreach (Collider2D enemy in hitEnemies)
+            {
+                Debug.Log(enemy.name);
+                enemy.GetComponent<EnemyDetectPlayer>().TakeDamage();
+            }
+        }
+
+        void OnDrawGizmosSelected()
+        {
+            if (attackPoint == null)
+                return;
+
+            Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+        }
+
+        void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.gameObject.CompareTag("PickUp") || other.gameObject.CompareTag("PickUp10"))
+            {
+                other.gameObject.SetActive(false);
+
+                if (other.gameObject.CompareTag("PickUp10"))
+                {
+                    coins += 10;
+                }
+                else
+                {
+                    coins += 1;
+                }
+                
+                SetCountText();
+            }
+        }
+
+        void SetCountText()
+        {
+            CoinText.text = coins.ToString();
         }
     }
 }

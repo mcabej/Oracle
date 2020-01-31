@@ -26,17 +26,28 @@ namespace Assets.Scripts
             Vector3Int enemyPos = Vector3Int.FloorToInt(transform.position);
             Vector3Int playerPos = Vector3Int.FloorToInt(Player.transform.position);
 
+            if (_playerHasSword)
+            {
+                Enemy.SetActive(false);
+            }
+
             if (playerPos == enemyPos)
             {
                 // if (_hasDamaged) return;  
                 if (!_playerHasSword)
                 {
+                    playerMovementScript.StopMovement();
                     Player.SendMessage("ReduceHealth", 1);
                     playerMovementScript.ResetPlayer();
                 }
                 else
                     Enemy.SetActive(false);
             }
-        }        
+        }
+
+        public void TakeDamage()
+        {
+            _playerHasSword = true;
+        }
     }
 }

@@ -10,6 +10,7 @@ public class Health : MonoBehaviour
     public Image[] Hearts;
     public Sprite FullHeart;
     public Sprite EmptyHeart;
+    public GameManagerScript gameManager;
 
     public void ReduceHealth(int damage)
     {
@@ -18,6 +19,11 @@ public class Health : MonoBehaviour
     
     void Update()
     {
+        if (NumOfHearts == 0)
+        {
+            FindObjectOfType<GameManagerScript>().GameOver();
+        }
+
         for (int i = 0; i < Hearts.Length; i++)
         {
             if (i < NumOfHearts)
